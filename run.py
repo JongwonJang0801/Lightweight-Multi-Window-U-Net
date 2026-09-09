@@ -15,7 +15,7 @@ def load_module_func(module_name):
 
 # setting step , load config file
 start_step = 1
-pass_step = [0,1]
+pass_step = [0,]
 '''
 Step 1:load_data
 Step 2: ready setting for train.
@@ -83,8 +83,6 @@ def main() :
                               conf['encoder_conf'])
         #print(model)
         model.to(device)
-        summary(model, (1,48,64)) # (model, input_size)
-        print(next(iter(train_loader))[0].size())
 
 
     if 3 >= start_step and not 3 in pass_step :
@@ -128,6 +126,7 @@ def main() :
                            path_test=os.path.join(conf['data_conf']['data_path'],conf['data_conf']['test_name']),
                            path_result= folder_save,
                            train_conf = conf['train_conf'],
+                           data_conf = conf['data_conf'],
                            device = device,)
 
 

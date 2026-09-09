@@ -22,19 +22,6 @@ def train(device, model, train_loader, val_loader, folder_save,epochs,lr, early_
     for epoch in range(epochs) :
         torch.cuda.init()
         torch.cuda.empty_cache()
-        # train
-        '''
-        for i, (inputs, targets) in enumerate(train_loader) :
-            inputs = inputs.to(device)
-            targets = targets.to(device)
-            
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            del loss, outputs, inputs, targets
-        '''
         with tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Epoch {epoch} Train") as pbar:
             for i, (inputs, targets) in pbar:
                 inputs = inputs.to(device)
@@ -57,7 +44,7 @@ def train(device, model, train_loader, val_loader, folder_save,epochs,lr, early_
         correct_cnt = 0
         loss_list = []
         with torch.no_grad() :
-            for (inputs, targets) in tqdm(val_loader):
+            for i_num, (inputs, targets) in tqdm(enumerate(val_loader)):
                 inputs = inputs.to(device)
                 targets = targets.to(device)
                 outputs = model(inputs)
@@ -86,8 +73,6 @@ def train(device, model, train_loader, val_loader, folder_save,epochs,lr, early_
             correct_cnt = 0
             with torch.no_grad() :
                 for i, (inputs, targets) in tqdm(enumerate(train_loader)) :
-                    if i == 10000 :
-                        break
                     inputs = inputs.to(device)
                     targets = targets.to(device)
                     outputs = model(inputs)

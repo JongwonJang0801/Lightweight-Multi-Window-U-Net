@@ -45,14 +45,12 @@ class myModel(nn.Module):
     def __init__(self, in_channels, fea_len, num_classes, cfg_encoder):
         super().__init__()
         self.fea_len = fea_len
-        #self.down_convolution_1 = DownSample(in_channels, 64)
         self.down_convolution_1 = DownSample(1, 64)
         self.down_convolution_2 = DownSample(64, 128)
         self.down_convolution_3 = DownSample(128, 256)
         self.down_convolution_4 = DownSample(256, 512)
 
         self.bottle_neck = DoubleConv(512, 1024)
-        #self.bottle_neck = DoubleConv(256, 512)
         
         self.up_convolution_1 = UpSample(1024, 512)
         self.up_convolution_2 = UpSample(512, 256)
@@ -71,9 +69,6 @@ class myModel(nn.Module):
         b = self.bottle_neck(p4)
         up_1 = self.up_convolution_1(b, down_4)
         up_2 = self.up_convolution_2(up_1, down_3)
-
-        #b = self.bottle_neck(p3)
-        #up_2 = self.up_convolution_2(b, down_3)
         up_3 = self.up_convolution_3(up_2, down_2)
         up_4 = self.up_convolution_4(up_3, down_1)
 

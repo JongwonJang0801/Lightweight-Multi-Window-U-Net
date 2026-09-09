@@ -9,11 +9,9 @@ class myModel(torch.nn.Module) :
         super(myModel, self).__init__()
         self.encoder = Encoder(input_len,fea_len,**cfg_encoder)
         self.decoder = Decoder(self.encoder.D_out*fea_len,n_class)
-        #self.ctc_layer = torch.nn.Linear(self.encoder.D_out, self.num_label)
         
     def forward(self, x) :
         encode_feature = self.encoder(x)
-        #ctc_output = torch.nn.functional.log_softmax(self.ctc_layer(encode_feature) + 1e-6, dim=-1)
         result = self.decoder(encode_feature)
         return result
 
@@ -32,9 +30,7 @@ class Encoder(torch.nn.Module) :
             module_list.append(nn.Conv2d(self.input_dim, D_layers[i],
                                          kernel_size=kernel_size[i],
                                          stride=1, padding='same', padding_mode='circular'))
-            #module_list.append(torch.nn.BatchNorm2d(D_layers[i]))
             module_list.append(nn.ReLU())
-            #module_list.append(nn.Dropout(p=0.2))
             self.input_dim = D_layers[i]
         self.D_out = self.input_dim
         self.layers = nn.ModuleList(module_list)

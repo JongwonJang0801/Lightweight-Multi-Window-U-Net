@@ -32,13 +32,7 @@ class CustomDataset(Dataset):
             for i in range(len(label)) :
                 label[i] = label[i]-1
         
-        feature_tensor = torch.from_numpy(feature).float().clone()
-        label_tensor = torch.tensor(label)
-        
-        # 명시적으로 대용량 딕셔너리 참조 해제 유도
-        del fea, feature, label
-        
-        return feature_tensor, label_tensor
+        return torch.from_numpy(feature).float(), torch.tensor(label)
         
 
 def main() :
