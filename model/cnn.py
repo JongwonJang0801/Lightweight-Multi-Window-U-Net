@@ -2,57 +2,52 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class myModel(torch.nn.Module) :
-    def __init__(self,input_len,fea_len,n_class,cfg_encoder) :
-        self.input_len = input_len
+class DoubleConv(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.conv_op = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        return self.conv_op(x)
+
+
+class myModel(nn.Module):
+    def __init__(self, in_channels, fea_len, num_classes, cfg_encoder):
+        super().__init__()
         self.fea_len = fea_len
-        super(myModel, self).__init__()
-        self.encoder = Encoder(input_len,fea_len,**cfg_encoder)
-        self.decoder = Decoder(self.encoder.D_out*fea_len,n_class)
-        
-    def forward(self, x) :
-        encode_feature = self.encoder(x)
-        result = self.decoder(encode_feature)
-        return result
+        self.encoder_conv_1 = DoubleConv(1,16)
+        self.encoder_conv_2 = DoubleConv(16,32)
+        self.encoder_conv_3 = DoubleConv(32,64)
+        self.encoder_conv_4 = DoubleConv(64,128)
 
-class Encoder(torch.nn.Module) :
-    def __init__(self,input_len, fea_len, n_layers,D_layers,kernel_size) :
-        super(Encoder, self).__init__()
-        self.input_len=input_len
-        self.fea_len=fea_len
+        self.bottle_neck = DoubleConv(128, 256)
         
-        module_list = list()
-        self.input_dim = 1
-        for i in range(n_layers) :
-            # torch.nn.Conv2d(in_channels, out_channels, kernel_size,
-            # stride=1, padding=0, dilation=1, groups=1, bias=True,
-            # padding_mode='zeros', device=None, dtype=None)
-            module_list.append(nn.Conv2d(self.input_dim, D_layers[i],
-                                         kernel_size=kernel_size[i],
-                                         stride=1, padding='same', padding_mode='circular'))
-            module_list.append(nn.ReLU())
-            self.input_dim = D_layers[i]
-        self.D_out = self.input_dim
-        self.layers = nn.ModuleList(module_list)
+        self.decoder_conv_1 = DoubleConv(256, 128)
+        self.decoder_conv_2 = DoubleConv(128, 64)
+        self.decoder_conv_3 = DoubleConv(64, 32)
+        self.decoder_conv_4 = DoubleConv(32, 16)
         
-    
-    def forward(self,x) :
-        for _, layer in enumerate(self.layers) :
-            x= layer(x)
-        x = x.view(-1, self.D_out*self.fea_len, self.input_len)
-        return x
+        self.conv1d = nn.Conv1d(16*self.fea_len, num_classes, 1)
+        
+        self.out = nn.Conv2d(in_channels=64, out_channels=num_classes, kernel_size=1)
+        
 
-class Decoder(torch.nn.Module) :
-    def __init__(self, input_len, label_len) :
-        super(Decoder, self).__init__()
-        module_list=[]
-        module_list.append(nn.Conv1d(input_len, 10, 1))
-        module_list.append(nn.ReLU())
-        module_list.append(nn.Conv1d(10, label_len, 1))
-        module_list.append(nn.Softmax())
-        self.layers = nn.ModuleList(module_list) 
-        
-    def forward(self,x) :
-        for _, layer in enumerate(self.layers) :
-            x= layer(x)
-        return x
+    def forward(self, x):
+        p1 = self.encoder_conv_1(x)
+        p2 = self.encoder_conv_2(p1)
+        p3 = self.encoder_conv_3(p2)
+        p4 = self.encoder_conv_4(p3)
+        b = self.bottle_neck(p4)
+        de1 = self.decoder_conv_1(b)
+        de2 = self.decoder_conv_2(de1)
+        de3 = self.decoder_conv_3(de2)
+        de4 = self.decoder_conv_4(de3)
+
+        out = torch.reshape(de4, (de4.size()[0],-1,de4.size()[-1]))
+        out =self.conv1d(out)
+        return out

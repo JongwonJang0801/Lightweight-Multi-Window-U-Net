@@ -104,7 +104,7 @@ def print_result(cnt_list, title, train_conf) :
         recall = cnt_list[i,i] / np.sum(cnt_list[i,:])
         print(f"\n\t\tclass{i}, precision : {precision}, recall : {recall}")
         print(f"\t\t\tF1_score : {2*(precision*recall)/(precision+recall)}")
-        weighted_f1 = 2*(precision*recall)/(precision+recall) * np.sum(cnt_list[i:]) / np.sum(cnt_list)
+        weighted_f1 += 2*(precision*recall)/(precision+recall) * np.sum(cnt_list[i,:]) / np.sum(cnt_list)
     print(f"\t\tweighted_f1 : {weighted_f1}")
 
 def set_test(model, path_test, path_result, train_conf, data_conf, device) :
